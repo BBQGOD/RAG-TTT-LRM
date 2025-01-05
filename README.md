@@ -2,6 +2,10 @@
 
 > Course Project of Advanced Machine Learning (AML) in THU 2024 Fall
 
+The project discovers how to combine the power of Retrieval-Augmented Generation (RAG) and Test-Time Training (TTT) to improve some cutting-edge Large Language Models (LLMs)' performance on the challenging GPQA benchmark. 
+
+Preliminary results show that the per-domain TTT on pretrained LLMs but aligned LLMs can improve its performance without RAG, but the per-domain TTT on aligned LLMs shows significant improvement when combined with RAG.
+
 ## Environment Setup
 
 1. Download `jeggers/gpqa_formatted` dataset and `OpenScholar/OpenScholar-DataStore-V3` dataset from [huggingface.co](huggingface.co). And also download `Qwen/QwQ-32B-Preview`, `meta-llama/Llama-3.1-8B-Instruct`, `THUDM/chatglm3-6b`, and `THUDM/chatglm3-6b-base` models. Remember to replace all the paths in the code with your own paths.
