@@ -1,3 +1,5 @@
+# Copyright (C) 2025  Zijun Liu, AML Course in 2024 Fall
+
 import json
 import logging
 import random
