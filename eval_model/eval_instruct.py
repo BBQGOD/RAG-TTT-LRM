@@ -15,12 +15,23 @@ Choices:
 (D) {}
 
 Please think step by step and output the final answer in the format: [[X]] (X is A, B, C, or D)."""
-MODEL = "/flash2/aml/public/models/Llama-3.1-8B-Instruct"
+# MODEL = "/flash2/aml/public/models/Llama-3.1-8B-Instruct"
+# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_rft"
+MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_cft"
+# MODEL = "/flash2/aml/public/models/chatglm3-6b"
+# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_inst_rft"
+# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_inst_cft"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0
-MAX_TOKENS = 8192
-TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_llama3_1_8b_inst/gpqa_eval_data.jsonl"
+MAX_TOKENS = 20480 # 4096, 8192, 20480
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_llama3_1_8b_inst/gpqa_eval_data.jsonl"
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_rft/gpqa_eval_data.jsonl"
+TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_cft/gpqa_eval_data.jsonl"
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_6b/gpqa_eval_data.jsonl"
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_llama3_1_rft/gpqa_eval_data.jsonl"
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_llama3_1_cft/gpqa_eval_data.jsonl"
 SKIP_ROW = 0
+MAX_WOKERS = 4 # 4, 32
 
 
 client = OpenAI(
@@ -42,8 +53,9 @@ def call_llm(question, choices):
     return response.choices[0].message.content
 
 def extract_last_X(s):
-    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]', s)
-    results = [match[0] if match[0] else match[1] for match in matches]
+    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]|\[([abcdABCD])\]|\((([abcdABCD]))\)', s)
+    
+    results = [match[0] if match[0] else match[1] if match[1] else match[2] if match[2] else match[3] for match in matches]
     
     return results[-1].upper() if results else None
 
@@ -74,7 +86,7 @@ answer_list = dataset['answer']
 
 with open(TARGET_FILE, "a") as f:
     item_list = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WOKERS) as executor:
         futures = [executor.submit(process_eid, eid, question, choices, choices[answer], chr(ord('A') + answer)) for eid, (question, choices, answer) in enumerate(zip(question_list, options_list, answer_list))]
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing"):
             item_list.append(future.result())

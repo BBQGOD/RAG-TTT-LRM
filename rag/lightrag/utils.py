@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 
 import numpy as np
 import tiktoken
+from transformers import AutoTokenizer
 
 from lightrag.prompt import PROMPTS
 
@@ -28,7 +29,11 @@ class UnlimitedSemaphore:
         pass
 
 
-ENCODER = None
+# MODEL = "/flash2/aml/public/models/chatglm3-6b"
+MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_cft"
+# MODEL = "/flash2/aml/public/models/Llama-3.1-8B-Instruct"
+# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_inst_cft"
+ENCODER = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 
 logger = logging.getLogger("lightrag")
 
@@ -159,7 +164,7 @@ def encode_string_by_tiktoken(content: str, model_name: str = "gpt-4o"):
     global ENCODER
     if ENCODER is None:
         ENCODER = tiktoken.encoding_for_model(model_name)
-    tokens = ENCODER.encode(content)
+    tokens = ENCODER.encode(content, add_special_tokens=False)
     return tokens
 
 

@@ -1102,35 +1102,35 @@ async def naive_query(
         return PROMPTS["fail_response"]
 
     logger.info(f"Truncate {len(chunks)} to {len(maybe_trun_chunks)} chunks")
-    section = "\n--New Chunk--\n".join([c["content"] for c in maybe_trun_chunks])
+    section = "\n".join([f"Document {i+1}: {c['content']}" for i, c in enumerate(maybe_trun_chunks)])
 
     if query_param.only_need_context:
         return section
 
     sys_prompt_temp = PROMPTS["naive_rag_response"]
     sys_prompt = sys_prompt_temp.format(
-        content_data=section, response_type=query_param.response_type
+        content_data=section #, response_type=query_param.response_type
     )
 
     if query_param.only_need_prompt:
         return sys_prompt
 
     response = await use_model_func(
-        query,
-        system_prompt=sys_prompt,
+        sys_prompt + "\n" + query,
+        # system_prompt=sys_prompt,
     )
 
-    if len(response) > len(sys_prompt):
-        response = (
-            response[len(sys_prompt) :]
-            .replace(sys_prompt, "")
-            .replace("user", "")
-            .replace("model", "")
-            .replace(query, "")
-            .replace("<system>", "")
-            .replace("</system>", "")
-            .strip()
-        )
+    # if len(response) > len(sys_prompt):
+    #     response = (
+    #         response[len(sys_prompt) :]
+    #         .replace(sys_prompt, "")
+    #         .replace("user", "")
+    #         .replace("model", "")
+    #         .replace(query, "")
+    #         .replace("<system>", "")
+    #         .replace("</system>", "")
+    #         .strip()
+    #     )
 
     # Save to cache
     await save_to_cache(

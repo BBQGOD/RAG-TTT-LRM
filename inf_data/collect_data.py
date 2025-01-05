@@ -5,19 +5,12 @@ import concurrent.futures
 from openai import OpenAI
 from datasets import load_dataset
 
+from template import TEMPLATE
 
-TEMPLATE = """Question: {}
-Choices: 
-(A) {}
-(B) {}
-(C) {}
-(D) {}
-
-Please think step by step and output the final answer in the format: [[X]] (X is A, B, C, or D)."""
 MODEL = "/flash2/aml/public/models/QwQ-32B-Preview"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0.5
-MAX_TOKENS = 30000
+MAX_TOKENS = 20480
 TARGET_FILE = "/flash2/aml/zjliu24/h20_data/inf_data_qwq_preview/gpqa_inf_data.jsonl"
 ANS_NUM = 64
 SKIP_ROW = 0
@@ -58,7 +51,7 @@ def process_aid(aid, question, choices, ref_option):
     except:
         response = ""
         resp_option = None
-    return (response, resp_option, rand_ref_option, resp_option == rand_ref_option if resp_option else False)
+    return (response, resp_option, rand_choices, rand_ref_option, resp_option == rand_ref_option if resp_option else False)
 
 dataset = dataset[SKIP_ROW:]
 question_list = dataset['Question']

@@ -18,8 +18,10 @@ Please think step by step and output the final answer in the format: [[X]] (X is
 MODEL = "/flash2/aml/public/models/chatglm3-6b-base"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0
-SHOT_NUM = 5
-TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_6b_base/gpqa_eval_data.jsonl"
+SHOT_NUM = 0
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_6b_base/gpqa_eval_data.jsonl"
+# TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_6b_base_1s/gpqa_eval_data.jsonl"
+TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_6b_base_0s/gpqa_eval_data.jsonl"
 SKIP_ROW = 0
 
 
@@ -52,7 +54,7 @@ def call_llm(question, choices):
     few_shot_list = random.sample(few_shot_list, SHOT_NUM)
     few_shot_prompt = process_few_shot(few_shot_list)
 
-    prompt = few_shot_prompt + "\n\n" + TEMPLATE.format(question, *choices)
+    prompt = few_shot_prompt + ("\n\n" if few_shot_prompt else "") + TEMPLATE.format(question, *choices)
     response = client.chat.completions.create(
                 model=MODEL,
                 messages=[{"role": "user", "content": prompt}],

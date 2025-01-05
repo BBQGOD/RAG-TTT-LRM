@@ -18,7 +18,7 @@ pyvis
 # lmdeploy[all]
 sqlalchemy
 tenacity
-
+jsonlines
 
 # LLM packages
 tiktoken

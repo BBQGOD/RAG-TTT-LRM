@@ -1,2 +1,8 @@
 
 inf_data/inf_data_qwq_preview/
+post_train/training_*
+rag/lightrag_cache_*
+lightrag_cache_*
+
+*.log
+**/__pycache__/**
