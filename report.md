@@ -110,15 +110,224 @@ Model training in this project is performed using `llama-factory`, which facilit
 
 ## Collection of TTT Data
 
-The per-domain TTT data is collected through majority voting with the `Qwen/QwQ-32B-Preview` model on the GPQA questions, aiming to distill long-term reasoning abilities in the specific domain without groundtruth labels. It is worth noting that the training data does not contain retrieved documents and citation marks.
+The per-domain TTT data is collected through majority voting with the `Qwen/QwQ-32B-Preview` model on the GPQA questions, aiming to distill long-term reasoning abilities in the specific domain without groundtruth labels. It is worth noting that the training data does not contain retrieved documents and citation marks. We term the training process with this data Collective Fine-Tuning (CFT).
+
+A case of collected data:
+
+```markdown
+### Question
+You have prepared an unknown product with the chemical formula C7H12O. To identify the product you have used the following characterisation techniques: FTIR, 1H NMR, and 13C NMR. The FTIR spectrum shows a strong absorption peak at 1725 wavenumbers. Several peaks were observed in the 13C NMR spectrum including one at 134 ppm. The H NMR spectrum also shows several peaks including a collection of 4 peaks in a 1:3:3:1 ratio at 5.2 ppm. Identify the product as either 3-Heptenal, 5-Methyl-4-Hexenal, 4-Methyl-4-Hexenal, or 4-Methyl-2-Cyclohexen-1-ol.
+Choices: 
+(A) 4-Methyl-4-Hexenal
+(B) 3-Heptenal
+(C) 4-Methyl-2-Cyclohexen-1-ol
+(D) 5-Methyl-4-Hexenal
+
+Please think step by step and output the final answer in the format: [[X]] (X is A, B, C, or D).
+
+### Response
+So I have this unknown product with the formula C7H12O, and I need to figure out which one it is among those four options: 3-Heptenal, 5-Methyl-4-Hexenal, 4-Methyl-4-Hexenal, or 4-Methyl-2-Cyclohexen-1-ol. I have data from FTIR, 1H NMR, and 13C NMR spectra. Let's see what each of these spectra can tell me.
+
+First, the FTIR spectrum shows a strong absorption peak at 1725 wavenumbers. I know that in FTIR, different functional groups absorb at specific wavelengths. A peak around 1725 cm⁻¹ is typical for a carbonyl group, like in aldehydes or ketones. So, that suggests my compound has an aldehyde or a ketone group.
+
+Next, the 13C NMR spectrum has a peak at 134 ppm. I recall that carbonyl carbons usually appear around 160-200 ppm, but 134 ppm seems a bit low for a carbonyl. Maybe it's not the carbonyl carbon? Let me check the typical chemical shift ranges for different types of carbons in 13C NMR. Aldehyde carbonyls are around 190-205 ppm, ketones around 205-220 ppm, and carbons adjacent to carbonyls are around 25-40 ppm, while methines and methylenes are around 10-60 ppm. So, 134 ppm doesn't fit well with any of these. Maybe it's a double-bonded carbon? Alkenes are around 115-145 ppm, so 134 ppm could be a double-bonded carbon.
+
+Now, looking at the 1H NMR spectrum, there's a collection of four peaks in a 1:3:3:1 ratio at 5.2 ppm. A 1:3:3:1 ratio suggests coupling with two neighboring protons, each having different numbers of neighboring protons. This could be due to a diastereotopic relationship or some other splitting pattern. At 5.2 ppm, these protons are likely to be allylic or vinyl protons, near a double bond or a carbonyl group.
+
+Let me consider each option one by one.
+
+Option (A): 4-Methyl-4-Hexenal.
+
+So, 4-methyl-4-hexenal. That would be a hexenal with a methyl group at position 4. The formula for hexenal is C6H10O, but with an additional methyl group, it should be C7H12O, which matches the given formula. Hexenal has an aldehyde group, so the FTIR peak at 1725 cm⁻¹ makes sense for the aldehyde carbonyl. In terms of NMR, the methyl group at position 4 would affect the proton environment.
+
+Option (B): 3-Heptenal.
+
+3-Heptenal would be an aldehyde with seven carbon atoms. The formula is C7H14O, but our compound is C7H12O, which has two fewer hydrogens, suggesting some unsaturation, like a double bond or a ring.
+
+Wait, hold on. C7H14O is the molecular formula for heptanal, but 3-heptenal would have a double bond, right? So, 3-heptenal would be CH3-CH2-CH=CH-CH2-CH2-CHO. Let's count the hydrogens: 7 carbons, 14 hydrogens, with one double bond, which reduces two hydrogens, so it should be C7H12O. Yes, that matches the formula.
+
+Option (C): 4-Methyl-2-Cyclohexen-1-ol.
+
+This is a cyclohexene derivative with a methyl group at position 4 and an alcohol at position 1. The formula is C7H12O, which matches. There's a double bond in the cyclohexene ring, and an alcohol group.
+
+Option (D): 5-Methyl-4-Hexenal.
+
+This would be hexenal with a methyl group at position 5. So, CH3-CH2-CH2-CH(CH3)=CH-CHO. Again, seven carbons, twelve hydrogens, and one oxygen, matching the formula.
+
+Now, let's see which of these matches the spectral data.
+
+First, the FTIR confirms a carbonyl group, which all options have except possibly option C, which is 4-methyl-2-cyclohexen-1-ol. But wait, alcohol has an OH group, not a carbonyl. But looking back, option C is 4-methyl-2-cyclohexen-1-ol, which does have an OH group but no carbonyl. However, in the choices, it's listed as having the formula C7H12O, which matches, but the FTIR shows a carbonyl, which wouldn't be present in an alcohol unless there's a carbonyl somewhere, but in the name, it's -ol, suggesting only OH.
+
+Wait, maybe I need to check the name again. 4-Methyl-2-cyclohexen-1-ol: cyclohexene with a methyl and an OH group. No carbonyl in the name, so perhaps no carbonyl in the structure. But the FTIR shows a carbonyl, so this might not be consistent unless there's another functional group present.
+
+Therefore, option C might be invalid because of the FTIR data.
+
+Now, between options A, B, and D, all have carbonyls.
+
+Looking at the 13C NMR, there's a peak at 134 ppm, which, as I thought earlier, might correspond to a double-bonded carbon, given the range for alkenes.
+
+In option A, 4-methyl-4-hexenal, there's a double bond in the hexenal part, so likely double-bonded carbons.
+
+Option B, 3-heptenal, also has a double bond in the alenal part.
+
+Option D, 5-methyl-4-hexenal, also has a double bond.
+
+So, all these have double bonds, which could account for the 134 ppm peak.
+
+Now, the 1H NMR shows a multiplet of four peaks in a 1:3:3:1 ratio at 5.2 ppm. This suggests coupling with two different protons, leading to a quartet of doublets or something similar.
+
+In terms of proton environments, this could be due to protons adjacent to the double bond, possibly vinyl protons.
+
+Let me consider the structures:
+
+Option A: 4-methyl-4-hexenal – structure is CH3-CH2-CH2-C(CH3)=CH-CHO
+
+Option B: 3-heptenal – structure is CH3-CH2-CH=CH-CH2-CH2-CHO
+
+Option D: 5-methyl-4-hexenal – structure is CH3-CH2-CH2-CH(CH3)=CH-CHO
+
+Looking at these structures, the protons at 5.2 ppm are likely the protons adjacent to the double bond.
+
+In option A, the protons on the double bond are CH=CH-CHO, so they might be deshielded and appear around 5-6 ppm.
+
+Similarly, in option B, the protons on the double bond are CH=CH-CH2-CH2-CHO, which should also appear around 5-6 ppm.
+
+In option D, the protons on the double bond are CH(CH3)=CH-CHO, again around 5-6 ppm.
+
+So, all these could potentially have protons in that region.
+
+But the splitting pattern is 1:3:3:1, which suggests coupling with two different protons, each with different numbers of neighboring protons.
+
+This kind of splitting can occur if the proton is coupled to two protons, one with three neighbors and another with one neighbor, leading to a complex multiplet.
+
+Let me try to predict the proton environments for each option.
+
+Starting with option A: CH3-CH2-CH2-C(CH3)=CH-CHO
+
+The double bond protons are CH=CH-CHO.
+
+The CH= group is attached to CHO and C(CH3).
+
+So, the protons on CH= are coupled to the proton on the other CH group (if it's a double bond) and possibly to the methyl group or other protons.
+
+Wait, in alkenes, the vinyl protons couple with each other with a large J value, typically around 10-18 Hz.
+
+But in this case, the splitting is more complex, suggesting coupling with other protons as well.
+
+Similarly, in option B: CH3-CH2-CH=CH-CH2-CH2-CHO
+
+Here, the double bond is between positions 3 and 4, with CH2 groups on either side.
+
+The protons on CH=CH would couple with each other and possibly with the adjacent CH2 protons.
+
+Option D: CH3-CH2-CH2-CH(CH3)=CH-CHO
+
+Here, the double bond is between positions 4 and 5, with a methyl group at position 5.
+
+Again, the vinyl protons would couple with each other and possibly with the adjacent CH2 and CH(CH3) groups.
+
+Given that, perhaps the splitting pattern can help distinguish between these options.
+
+But it's getting a bit complicated. Maybe I should look for other clues.
+
+Looking back at the 13C NMR, there's a peak at 134 ppm, which I thought might be a double-bonded carbon.
+
+But in option C, which is 4-methyl-2-cyclohexen-1-ol, there is a double bond in the cyclohexene ring.
+
+However, as per the FTIR, there's a carbonyl present, which may not be in option C, unless there's a carbonyl in the ring, but the name suggests only an OH group.
+
+Therefore, option C might be invalid based on the FTIR data.
+
+So, perhaps the answer is among options A, B, or D.
+
+Wait, perhaps I need to consider that option C has a carbonyl if it's a hemiacetal or something, but the name is 4-methyl-2-cyclohexen-1-ol, which doesn't indicate a carbonyl.
+
+Therefore, it's safe to eliminate option C.
+
+Now, between A, B, and D, all have similar structures with double bonds and carbonyls.
+
+Perhaps I need to look for more specific data.
+
+Looking back at the 1H NMR, the four peaks in a 1:3:3:1 ratio at 5.2 ppm.
+
+This splitting pattern suggests that the proton is coupled to two other protons, one with three neighbors and one with one neighbor.
+
+This could be due to vicinal coupling, where the proton is coupled to two different protons on adjacent carbons.
+
+But in vinyl protons, they typically couple strongly with each other, giving a doublet.
+
+However, in more complex situations, especially with nearby protons, the splitting can be more complicated.
+
+Alternatively, perhaps there is a coupling with protons on adjacent carbons.
+
+But this is getting too complicated for me to interpret without more specific data.
+
+Maybe I should consider the number of signals in the 1H NMR.
+
+But the question only mentions one specific multiplet.
+
+Perhaps there are other peaks in the spectrum that could help, but they are not provided.
+
+Given that, perhaps I need to consider the location of the peak at 5.2 ppm.
+
+In option A, 4-methyl-4-hexenal, the vinyl protons might be shifted downfield due to the electron-withdrawing carbonyl group.
+
+Similarly, in option B, 3-heptenal, the vinyl protons would also be influenced by the carbonyl.
+
+Option D, 5-methyl-4-hexenal, has the double bond between C4 and C5, with a methyl group on C5.
+
+The vinyl protons might have a different chemical shift due to the methyl substitution.
+
+Perhaps the methyl group affects the chemical shift, pushing it upfield or downfield.
+
+But without more specific data on chemical shifts, it's hard to distinguish.
+
+Alternatively, perhaps the splitting pattern can be used to distinguish between the options.
+
+In option A, the vinyl protons are coupled to the methyl group on C4, which has three protons.
+
+In option D, the vinyl protons are coupled to the CH(CH3) group, which has two protons.
+
+But I'm not sure if that directly corresponds to the 1:3:3:1 multiplet.
+
+Alternatively, maybe it's a more complex coupling that results in that pattern.
+
+Given that, perhaps option A is the correct answer.
+
+But I'm not entirely sure.
+
+Alternatively, perhaps it's option D.
+
+Wait, maybe I should look at the number of protons in each option.
+
+But the ratio is 1:3:3:1, which adds up to 8 protons, but that might not correspond directly.
+
+Alternatively, perhaps it's a quartet of doublets, which would result from coupling with two protons with different J values.
+
+But without more specific knowledge of NMR coupling, it's hard for me to interpret.
+
+Perhaps I should consider that the peak at 5.2 ppm corresponds to the vinyl protons, and the splitting pattern is due to coupling with neighboring protons.
+
+Given that, perhaps in one of the options, the proton environment matches this splitting pattern.
+
+Alternatively, perhaps there is a different proton group in one of the options that matches this description.
+
+But without more specific data or access to a database of NMR spectra, it's challenging to make a definitive identification.
+
+Given the information provided, and considering the FTIR indicates a carbonyl, and the 13C NMR has a peak at 134 ppm likely corresponding to a double-bonded carbon, and the 1H NMR has a specific multiplet at 5.2 ppm, I would tentatively identify the product as 4-Methyl-4-Hexenal (option A).
+
+However, I'm not entirely confident in this choice, as options B and D seem similar, and without more detailed NMR data, it's difficult to distinguish between them.
+
+Therefore, my answer is: [[A]]
+```
 
 > **Why not using retrieved documents in collecting TTT data?**  
 > Because of two reasons.  
 > First, the retrieved documents are not always correct, and the model may be misled by incorrect information, which could harm the data quality.  
-> Second, as discussed above, the model should be able to generate answers based on its own knowledge, and the retrieved documents are only used to provide plug-and-play additional information, which should not be include in the training data.  
+> Second, as discussed above, the model should be able to generate answers based on its own knowledge, and the retrieved documents are only used to provide plug-and-play additional information that could even not be used in responses, which should not be included in the training data.  
 > However, the ability to cite and use the related document is still important, which is related to the inherent instruction-following capabilities of the model. We leave this auxiliary task to the future work, and did not include it in the training data.
 
-Additionally, a ground truth-based baseline dataset is provided for comparison, which use the groundtruth labels to rejectively filter generated responses from `Qwen/QwQ-32B-Preview`.
+Additionally, a ground truth-based baseline dataset is provided for comparison, which use the groundtruth labels to rejectively filter generated responses from `Qwen/QwQ-32B-Preview`. We term the training process with this data Rejective Fine-Tuning (RFT).
 
 ## Hyper-Parameters of Per-Domain TTT
 
@@ -162,6 +371,10 @@ Here are the plot of training loss for each training recipe. The pattern are dis
 
 Experiments focused on evaluating both pretrained LLMs and those enhanced with RAG on the GPQA benchmark. The evaluation compared the performance of bare LLMs, LLMs fine-tuned with TTT, and LLMs further augmented with RAG.
 
+### A Figure Showing the Running Framework
+
+![Running Framework](./rag/lightrag_running.png)
+
 ### Evaluation Settings
 
 GPQA benchmark contains 448 questions, and each question has 4 choices. The metric is accuracy, which is the proportion of correctly answered questions. The evaluation is conducted in following settings:
@@ -194,66 +407,129 @@ For ChatGLM3-6b, the maximum generated tokens are 4096, for LLaMA-3.1-8B-Instruc
 
 > \* denotes collapsed results, where the model failed to generate responses to most questions.
 
+#### A Case of Document Citation of `LLaMA-3.1-8B-Instruct + CFT + RAG`
+
+```markdown
+### Context
+---Role---
+
+You are a helpful assistant responding to questions about documents provided.
+
+---Documents---
+
+Document 1: the comments and revise your manuscript. Because the schedule for publication is very tight, it is a condition of publication that you submit the revised version of your manuscript before 04-Apr-2020. Please note that the revision deadline will expire at 00.00am on this date. If you do not think you will be able to meet this date please let me know immediately. To revise your manuscript, log into https://mc.manuscriptcentral.com/rsos and enter your Author Centre, where you will find your manuscript title listed under "Manuscripts with Decisions". Under "Actions," click on "Create a Revision." You will be unable to make your revisions on the originally submitted version of the manuscript. Instead, revise your manuscript and upload a new version through your Author Centre. When submitting your revised manuscript, you will be able to respond to the comments made by the referees and upload a file "Response to Referees" in "Section 6 -File Upload". You can use this to document any changes you make to the original manuscript. In order to expedite the processing of the revised manuscript, please be as specific as possible in your response to the referees. When uploading your revised files please make sure that you have: 1) A text file of the manuscript (tex, txt, rtf, docx or doc), references, tables (including captions) and figure captions. Do not upload a PDF as your "Main Document". 2) A separate electronic file of each figure (EPS or print-quality PDF preferred (either format should be produced directly from original creation package), or original software format) 3)
+Document 2: have discussed. As one can see the acceptable baryon asymmetry may arise for rather low scales, in contrast to the (simpler) seesaw type-I schemes. Note, however that the values given in the table are by no means unique, and are also not meant to be "representative" of the classes. The generation of the baryon asymmetry is far easier in this context than in the traditionl seesaw model. The presence of the new singlets allows us to have, in addition, acceptable textures for the quark and lepton mixing angles. VI. CONCLUSIONS We have reviewed the argument that in minimal type-I SO(10) seesaw one can not easily reconcile the thermal leptogenesis scenario with the successful Fritzsch texture for the quarks and an acceptable pattern of lepton masses and mixings that follow from neutrino oscillation experiments. This is due to the fact that the large seesaw scale needed to account for small neutrino masses leads to an overproduction of cosmological gravitinos, which destroys the standard predictions of Big Bang Nucleosynthesis (BBN). Barring the very special case of resonant leptogenesis, one must go beyond the minimal type-I seesaw mechanism. In this paper we have studied in some detail an extended seesaw scenario as a natural way to overcome this limitation. The proposed extension has the added virtue of providing a natural setting for reconciling the observed structure of neutrino mixing angles with the strong hierarchy among quark masses and the smallness of the quark mixings. While this can always be accommodated in a "generic" unified theory with arbitrary multiplet content,
+Document 3: A θ − B, where B ∈ U. Furthermore, the operator A θ − B has the block-diagonal structure and its spectral properties are easy to study.Since the operators S θ and A θ − B are similar, the operator S θ has the same properties as A θ − B. In order to realize this idea, we need some technical tools. Further in this section, we investigate the operator A θ − B, where B ∈ U. Definition 1 ([19] ).Let U be a linear subspace of L A θ (H), and let J : U → U, Γ : U → B(H) be linear operators.A triple (U, J, Γ) is called an admissible for the operator A θ and U is the space of admissible perturbations, if the following properties hold: 1) U is a Banach space with norm ∥ • ∥ * such that there is a constant C > 0 that gives ∥X∥ A ≤ C∥X∥ * for any X ∈ U; 2) J and Γ are bounded linear operators, J is a projection; where ΓX ∈ B(H) is a unique solution of the equation 5) for every X ∈ U and ε > 0 there exists a number λ ε ∈ ρ(A θ ) such that where ρ(A θ ) is the resolvent set of the operator A θ. To get an idea about this definition, one should think of the operators involved in terms of their matrices.The operator A θ is represented by a diagonal matrix.The operator B has
+Document 4: charge, the loop functions A f (τ ) and A v (τ ) are given in [24], and τ t = m 2 φ /4m 2 t, τ W = m 2 φ /4m 2 W. The numerical size of (6) would then be 1 which is two orders of magnitude smaller than the typical size of c γ ( ) LHC from (4). This requires contributions to c γ ( ) much bigger than c SML γ, presumably arising from certain underlying physics. We sketch a generic diagram for this in Fig. 1(a). This graph can be embedded in Fig. 1(b) thereby generating a contribution to a µ, provided that φ ( ) couples to muons. In view of the large | c γ ( ) | from (4), it might be expected to induce a sizeable ∆a µ. An obstacle is however that the effective operator in (3) cannot be used for a direct calculation of the diagram in Fig. 1 (b). This is mainly due to the difference between the kinematics involved in the φ ( ) → γγ and ∆a µ calculations. For example, the photons in Fig. 1(a) are highly energetic while the external photon in Fig. 1(b) is very soft. A naive application of (3) would lead to both ultraviolet and infrared divergences in ∆a µ. To circumvent these problems, we shall assume that the φ ( ) -γ-γ vertex originates from loops of heavy particles. Moreover, we shall mainly focus on cases where
+Document 5: respectively. Integration of Σ,Σ states lead to the operator of Eq. (6) for λ 4 given by: (B.10)]. The first diagram of Fig. 3 corresponds to the generation of this operator, which give loop induced neutrino masses as shown in Sect. 2.1. Also within this case, the needed suppression of λ 4 can be achieved, for example, by the selection Via exchange of Σ,Σ states, the four slepton interaction operator is also generated, which in a same approximation (as Eq. (26)) is: where a, b = 1, 2 are SU(2) w indices [see Eq. (B.11) for more accurate expression]. The corresponding diagram is the second one in Fig. 3. By 2-loop gaugino/higgsino dressing diagrams, the operator (27) will be converted to the four lepton operator. The latter in turn induce e i → e j e m e m rare decays, including processes such as τ → 3µ, µ → 3e etc. These will constrain the A Σ matrix elements via experimental limits [13] and open window to probe this mechanism of neutrino mass generation. Finally, the κ-term in Eq. (24) generates the mass term for the fermionicΣ,Σ components µ ΣΣΣ with µ Σ ∼ κm 3/2. Type II-B soft see-saw model In this modified version, the neutrino masses are induced at 2-loop level. The R-charges of the states are given in Table 3 and the Kähler potential couplings are The X †Σ h u h u term is forbidden in the Kähler potential, but the following superpotential coupling, involvingΣ, is allowed: The MSSM superpotential
+
+---------------
+
+### Question
+
+A paper you are reading about the seesaw mechanisms for generating neutrino masses reminds you that these mechanisms are not to be considered fundamental; instead one must open up the operator to arrive at a natural, more fundamental theory. What is the technical term for the casual phrase "opening up the operator"?
+Choices: 
+(A) Infrared divergence
+(B) Ultraviolet divergence
+(C) Infrared completion
+(D) Ultraviolet completion
+
+Please think step by step and output the final answer in the format: [[X]] (X is A, B, C, or D), and denote any related document in the response in the format: ((X)) (X is the number of the document).
+
+### Response
+
+So I have this question here about seesaw mechanisms for neutrino masses, and it says that these mechanisms aren't fundamental, and instead, we need to "open up the operator" to get to a more natural, fundamental theory. The question is asking for the technical term that corresponds to this casual phrase. The choices are:
+
+(A) Infrared divergence
+
+(B) Ultraviolet divergence
+
+(C) Infrared completion
+
+(D) Ultraviolet completion
+
+Okay, first, I need to understand what "opening up the operator" means in this context. From what I recall, in particle physics, especially in theories beyond the Standard Model, operators are used to describe interactions or effects that aren't directly present in the original theory. So, "opening up the operator" probably means expanding or completing the operator to include higher-energy physics or new degrees of freedom that weren't accounted for in the original operator.
+
+Now, let's think about the options:
+
+(A) Infrared divergence: This refers to problems that arise at low energies or long distances in a theory. It's not directly related to expanding or completing operators to include higher-energy physics.
+
+(B) Ultraviolet divergence: This is about problems at high energies or short distances. Again, not directly about expanding operators to include higher-energy physics.
+
+(C) Infrared completion: This sounds like completing the theory at low energies or long distances. But the phrase "opening up the operator" seems more related to including higher-energy physics.
+
+(D) Ultraviolet completion: This refers to completing the theory at high energies or short distances, which aligns with the idea of including new physics at higher energy scales.
+
+Given that, I think the correct answer is (D) Ultraviolet completion. This makes sense because "opening up the operator" likely means extending the operator to include higher-energy physics or new degrees of freedom that weren't present in the original operator.
+
+To confirm, let's look at the documents provided. Document 4 mentions "the numerical size of (6) would then be 1 which is two orders of magnitude smaller than the typical size of c γ ( ) LHC from (4). This requires contributions to c γ ( ) much bigger than c SML γ, presumably arising from certain underlying physics." This suggests that there are contributions from higher-energy physics that aren't accounted for in the original operator.
+
+Similarly, Document 5 talks about loop diagrams and the generation of operators at different levels, which involves including higher-energy physics through loops.
+
+So, based on this, it seems that "opening up the operator" refers to including higher-energy physics or new degrees of freedom, which is the essence of ultraviolet completion.
+
+Therefore, the answer is [[D]].
+
+((4))
+```
+
 The following sections delve into the detailed analysis of the results presented in the table above.
 
 ### Performance of Bare LLMs
 
 **ChatGLM3-6b-base:**
-- **Zero-Shot (0-shot):** Achieved an accuracy of 23.2%, which serves as the baseline performance without any additional context or examples.
-- **Few-Shot Learning:** 
+- **Zero-Shot:** Achieved an accuracy of 23.2%, which serves as the baseline performance without any additional context or examples.
+- **Few-Shot:** 
   - **1-shot:** Improvement observed with an accuracy of 25.4%.
   - **5-shot:** Further enhancement to 26.3%, indicating that providing a few examples aids the model in better understanding and responding to the questions.
-- **Aligned Version (ChatGLM3-6b):** Notably underperformed with an accuracy of 21.4%, which is lower than its base counterpart. This suggests that alignment processes may have inadvertently reduced the model's effectiveness on the GPQA benchmark.
+- **Aligned Version - ChatGLM3-6b:** Notably underperformed with an accuracy of 21.4%, which is lower than its base counterpart. This suggests that alignment processes may have inadvertently reduced the model's effectiveness on the GPQA benchmark.
 
-**LLaMA-3.1-8B-Instruct:**
-- **Zero-Shot Performance:** Recorded an accuracy of 25.7%, outperforming the zero-shot ChatGLM3-6b-base by approximately 2.5 percentage points. This indicates a stronger inherent capability in handling the GPQA questions without additional training.
+**LLaMA-3.1-8B-Instruct:** Recorded an accuracy of 25.7%, outperforming the zero-shot ChatGLM3-6b-base by approximately 2.5 percentage points. This indicates a stronger inherent capability in handling the GPQA questions without additional training.
 
-### Impact of Test-Time Training (TTT)
+### Impact of TTT
 
-**ChatGLM3-6b-base:**
+**ChatGLM3-6b-base:** TTT on pretrained LLMs
 - **Collective Fine-Tuning (CFT):** Achieved an accuracy of 26.8%, representing a modest improvement over the 5-shot baseline. This demonstrates that TTT can enhance the model's performance by adapting it to the specific domain of the GPQA benchmark.
-- **Rejective Fine-Tuning (RFT):** The results collapsed, with the model failing to generate responses to most questions. This failure could be attributed to overfitting or instability introduced during the rejective fine-tuning process.
+- **Rejective Fine-Tuning (RFT):** The results collapsed, with the model failing to generate responses to most questions. This failure could be attributed to the small amount of rejective sampled training data, which may cause overfitting or instability in the pretrained model.
 
-**LLaMA-3.1-8B-Instruct:**
-- **CFT:** Showed a slight decrease in performance to 25.4%, which is marginally lower than its zero-shot counterpart. This suggests that collective fine-tuning may not significantly benefit this model or could introduce noise that slightly hampers its performance.
+**LLaMA-3.1-8B-Instruct:** TTT on aligned LLMs
+- **CFT:** Showed a slight decrease in performance to 25.4%, which is marginally lower than its zero-shot counterpart. This suggests that collective fine-tuning may not significantly benefit the aligned model without external knowledge input.
 - **RFT:** Experienced a more substantial drop to 24.3%, indicating that rejective fine-tuning negatively impacts the model's ability to handle the GPQA questions effectively.
 
-### Effectiveness of Retrieval-Augmented Generation (RAG)
+### Effectiveness of RAG
 
 **ChatGLM3-6b + RAG:**
-- **Performance:** Recorded an accuracy of 18.1%, which is lower than the bare ChatGLM3-6b-base model. This decline suggests that the integration of RAG, in this configuration, may have introduced noise or irrelevant information that confused the model, leading to poorer performance.
+- **Performance:** Recorded an accuracy of 18.1%, which is lower than the bare ChatGLM3-6b model. This decline suggests that the integration of RAG, in this configuration, may have introduced more noise that confused the model than helpful information that the model could capture, leading to poorer performance.
 
 **LLaMA-3.1-8B-Instruct + RAG:**
 - **Performance:** Achieved an accuracy of 29.0%, marking a significant improvement over the bare LLaMA model. This indicates that RAG effectively supplements the model's internal knowledge with external information, enhancing its ability to answer GPQA questions accurately.
 
 **Combined TTT and RAG:**
-- **ChatGLM3-6b-base + CFT + RAG:** Collapsed, failing to generate responses for most questions. The combination of collective fine-tuning and RAG likely overwhelmed the model, resulting in instability.
-- **LLaMA-3.1-8B-Instruct + CFT + RAG:** Excelled with an accuracy of 33.5%, representing the highest performance across all configurations. This demonstrates the synergistic effect of combining RAG with TTT, where the model benefits from both augmented retrieval capabilities and domain-specific fine-tuning.
+- **ChatGLM3-6b-base + CFT + RAG:** Collapsed, failing to generate responses for most questions. The combination of collective fine-tuning and RAG likely overwhelmed the model, since the model is only trained on GPQA responses from pretrained checkpoint. This suggests that the model may require more diverse training data to effectively leverage both techniques.
+- **LLaMA-3.1-8B-Instruct + CFT + RAG:** Excelled with an accuracy of 33.5%, representing the highest performance across all configurations. This demonstrates the synergistic effect of combining RAG with TTT, where the model benefits from both augmented retrieved external knowledge and long-term reasoning. Compared to `ChatGLM3-6b-base + CFT + RAG` setting, the stronger inherent data comprehension capabilities from the generally aligned LLM might help the combination of RAG and TTT in positive way.
 
 ### Summary of Key Observations
 
 1. **RAG Augmentation Benefits:** The integration of RAG consistently improved the performance of the LLaMA-3.1-8B-Instruct model, especially when combined with TTT. This underscores the value of external knowledge sources in enhancing LLMs' reasoning and domain-specific capabilities.
 
-2. **TTT Variability:** While TTT provided benefits in some configurations (e.g., ChatGLM3-6b-base + CFT), it also led to performance collapses in others, particularly when combined with RAG. This highlights the sensitivity of TTT to model architecture and the nature of fine-tuning data.
+2. **TTT Variability:** While TTT provided benefits in some configurations (e.g., ChatGLM3-6b-base + CFT), it also led to performance collapses in others, particularly when combined with RAG. This highlights the sensitivity of TTT to base models and the nature of tasks the model faces.
 
 3. **Model-Specific Responses:** Different models responded uniquely to RAG and TTT. LLaMA-3.1-8B-Instruct showed robust improvements with RAG and combined TTT, whereas ChatGLM3-6b-base experienced instability when both techniques were applied together.
 
-4. **Limitations of RFT:** Rejective Fine-Tuning (RFT) generally did not yield positive results and, in some cases, degraded performance. This suggests that the rejective sampling approach may not be optimal for the GPQA benchmark or the models used.
+4. **Limitations of RFT:** Rejective Fine-Tuning (RFT) generally did not yield positive results and, in some cases, degraded performance. This suggests that the rejective sampling approach may not be optimal even if it uses groundtruth labels.
 
-5. **Instruction-Following Capabilities:** The ability of the models to cite related documents, as facilitated by RAG, appears to contribute positively to their performance, especially in the LLaMA model.
+5. **Instruction-Following Capabilities:** The ability of the models to cite and comprehend related documents, as facilitated by RAG, appears to contribute positively to their performance, especially in the LLaMA model.
 
 ## Conclusion
 
-This study investigated the synergistic integration of Retrieval-Augmented Generation (RAG) and Test-Time Training (TTT) to enhance the performance of large language models (LLMs) on the GPQA benchmark. The experimental results reveal several key insights:
+This study investigated the synergistic integration of Retrieval-Augmented Generation (RAG) and per-domain Test-Time Training (TTT) to enhance the performance of LLMs on the GPQA benchmark. The experimental results reveal several key insights:
 
 1. **RAG as a Valuable Augmentation:** Incorporating RAG significantly bolstered the LLaMA-3.1-8B-Instruct model's accuracy, demonstrating the effectiveness of external knowledge retrieval in supporting domain-specific question answering.
 
 2. **TTT Enhances Domain Adaptation:** TTT contributed to improved performance in certain configurations, particularly when combined with RAG, highlighting its role in adapting models to specific domains through dynamic fine-tuning.
 
-3. **Model-Specific Efficacy:** The benefits of RAG and TTT were not uniform across all models. While LLaMA-3.1-8B-Instruct thrived under combined augmentation, ChatGLM3-6b-base faced stability issues, indicating that model architecture and inherent capabilities influence the effectiveness of these techniques.
+3. **Model-Specific Efficacy:** The benefits of RAG and TTT were different across pretrained and aligned models. While LLaMA-3.1-8B-Instruct thrived under combined augmentation, ChatGLM3-6b-base faced stability issues, indicating that model architecture and inherent capabilities influence the effectiveness of these techniques.
 
-4. **Challenges with Fine-Tuning Approaches:** Rejective Fine-Tuning (RFT) did not yield favorable outcomes, suggesting the need for refined strategies in selecting and curating training data for TTT to avoid potential performance degradation.
+4. **Synergistic Potential:** The highest accuracy was achieved by combining RAG with Collective Fine-Tuning (CFT) for long-term reasoning in the LLaMA-3.1-8B-Instruct model, underscoring the potential of leveraging these multiple augmentation techniques to maximize LLM performance on complex benchmarks.
 
-5. **Synergistic Potential:** The highest accuracy was achieved by combining RAG with Collective Fine-Tuning (CFT) in the LLaMA-3.1-8B-Instruct model, underscoring the potential of leveraging multiple augmentation techniques to maximize LLM performance on complex benchmarks.
-
-In conclusion, the fusion of RAG and TTT presents a promising avenue for enhancing LLM capabilities, particularly in specialized domains requiring both extensive knowledge retrieval and nuanced reasoning. Future work should explore optimizing fine-tuning strategies and expanding the applicability of these techniques to a broader range of models and benchmarks to further validate and extend these findings.
+In conclusion, the fusion of RAG and per-domain TTT presents a promising avenue for enhancing LLM capabilities, particularly in specialized domains requiring both extensive knowledge retrieval and nuanced reasoning.
