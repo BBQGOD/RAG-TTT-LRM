@@ -1,5 +1,7 @@
 # Retrieval-Augmented Generation (RAG) Meets Per-Domain Test-Time Training (TTT)
 
+> Course Project of Advanced Machine Learning (AML) in THU 2024 Fall
+
 ## Environment Setup
 
 1. Download `jeggers/gpqa_formatted` dataset and `OpenScholar/OpenScholar-DataStore-V3` dataset from [huggingface.co](huggingface.co). And also download `Qwen/QwQ-32B-Preview`, `meta-llama/Llama-3.1-8B-Instruct`, `THUDM/chatglm3-6b`, and `THUDM/chatglm3-6b-base` models. Remember to replace all the paths in the code with your own paths.
