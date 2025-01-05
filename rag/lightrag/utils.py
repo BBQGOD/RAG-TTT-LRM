@@ -30,9 +30,9 @@ class UnlimitedSemaphore:
 
 
 # MODEL = "/flash2/aml/public/models/chatglm3-6b"
-MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_cft"
+# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_cft"
 # MODEL = "/flash2/aml/public/models/Llama-3.1-8B-Instruct"
-# MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_inst_cft"
+MODEL = "/flash2/aml/zjliu24/gpqa_agent/post_train/training_inst_cft"
 ENCODER = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 
 logger = logging.getLogger("lightrag")

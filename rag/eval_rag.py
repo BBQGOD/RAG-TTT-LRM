@@ -23,12 +23,12 @@ Please think step by step and output the final answer in the format: [[X]] (X is
 
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0
-MAX_TOKENS = 8192 # 4096, 8192, 20480
-TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_cft_rag/gpqa_eval_data.jsonl"
+MAX_TOKENS = 20480 # 4096, 8192, 20480
+TARGET_FILE = "/flash2/aml/zjliu24/h13_data/eval_model_chatglm3_rag/gpqa_eval_data.jsonl"
 SKIP_ROW = 0
 BASE_URL = "http://localhost:7689/v1"
 API_KEY = "token-abc123"
-MAX_WORKERS = 32
+MAX_WORKERS = 16
 DATA_BASE_FILE = r"/flash2/aml/zjliu24/datasets/OpenScholar-DataStore-V3/passages/raw_passages-0-of-16.jsonl"
 DATA_BASE_CNT = 100000
 RAG_TOP_K = 5
