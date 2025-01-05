@@ -16,6 +16,7 @@ Preliminary results show that the per-domain TTT on pretrained LLMs but aligned 
 
 ```bash
 pip install vllm # all models should be served with vllm or OpenAI-API-compatible service
+pip install llama-factory
 pip install -r rag/requirements.txt
 ```
 
@@ -25,7 +26,9 @@ pip install -r rag/requirements.txt
 
 We use the first 100000 chunks in the `OpenScholar/OpenScholar-DataStore-V3` dataset to build the RAG knowledge base, which could be configured in `rag/eval_rag.py`.
 
-## Collect Per-Domain TTT Data
+## Per-Domain TTT
+
+### Data Collection
 
 TTT data are collected by majority voting with `Qwen/QwQ-32B-Preview`. We also provide groundtruth-based baseline training set.
 
@@ -35,6 +38,18 @@ python collect_data.py
 python proc_cft_set.py # generate majority voted data
 python proc_rft_set.py # generate groundtruth-based baseline data
 ```
+
+### Training
+
+We use `llama-factory` to train the models on H100 GPUs.
+
+```bash
+FORCE_TORCHRUN=1 llamafactory-cli train post_train/*.yaml
+```
+
+- `post_train/llama_inst_cft.yaml` requires 8 GPUs.
+- `post_train/llama_inst_rft.yaml`, `post_train/chatglm3_full_cft.yaml`, and `post_train/chatglm3_full_rft.yaml` require 4 GPUs.
+
 
 ## Evaluation on GPQA Benchmark
 
