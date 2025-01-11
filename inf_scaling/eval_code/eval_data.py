@@ -8,7 +8,7 @@ from typing import List
 from collections import Counter
 import concurrent.futures
 
-CUTOFF_RANGE = 0.4
+CUTOFF_RANGE = 0.1
 
 def expected_PassN(M, T, N):
     """
