@@ -1,20 +1,23 @@
 # Copyright (C) 2025  Zijun Liu, AML Course in 2024 Fall
 
-import json
 import random
 import re
 import concurrent.futures
+import time
 from openai import OpenAI
 from datasets import load_dataset
 
 from template import TEMPLATE
 
-MODEL = "/flash2/aml/public/models/QwQ-32B-Preview"
+# MODEL = "/flash2/aml/public/models/QwQ-32B-Preview"
+# MODEL = "/flash2/aml/public/models/Llama-3.1-8B-Instruct"
+MODEL = "/flash2/aml/public/models/chatglm3-6b"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0.5
-MAX_TOKENS = 20480
-TARGET_FILE = "/flash2/aml/zjliu24/h20_data/inf_data_qwq_preview/gpqa_inf_data.jsonl"
-ANS_NUM = 64
+# MAX_TOKENS = 20480
+# MAX_TOKENS = 8192
+MAX_TOKENS = 4096
+ANS_NUM = 1
 SKIP_ROW = 0
 
 
@@ -37,7 +40,6 @@ def call_llm(question, choices):
     return response.choices[0].message.content
 
 def extract_last_X(s):
-    # need to be updated by `inf_scaling/inf_code/update_data.py`
     matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]', s)
     results = [match[0] if match[0] else match[1] for match in matches]
     
@@ -61,25 +63,26 @@ question_list = dataset['Question']
 options_list = dataset['options']
 answer_list = dataset['answer']
 
-with open(TARGET_FILE, "a") as f:
-    for eid, example in enumerate(zip(question_list, options_list, answer_list)):
-        print(f"Processing example {eid}")
-        resp_list = []
-        question = example[0]
-        choices = example[1]
-        answer = choices[example[2]]
-        ref_option = chr(ord('A') + example[2])
-        
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(process_aid, aid, question, choices, ref_option) for aid in range(ANS_NUM)]
-            for future in concurrent.futures.as_completed(futures):
-                resp_list.append(future.result())
+start_time = time.time()
+for eid, example in enumerate(zip(question_list, options_list, answer_list)):
+    print(f"Processing example {eid}")
+    resp_list = []
+    question = example[0]
+    choices = example[1]
+    answer = choices[example[2]]
+    ref_option = chr(ord('A') + example[2])
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_aid, aid, question, choices, ref_option) for aid in range(ANS_NUM)]
+        for future in concurrent.futures.as_completed(futures):
+            resp_list.append(future.result())
 
-        item = {
-            'question': question,
-            'options': choices,
-            'ref_option': ref_option,
-            'answer': answer,
-            'responses': resp_list
-        }
-        f.write(json.dumps(item) + "\n")
+    item = {
+        'question': question,
+        'options': choices,
+        'ref_option': ref_option,
+        'answer': answer,
+        'responses': resp_list
+    }
+end_time = time.time()
+print(f"Time elapsed: {end_time - start_time} seconds")

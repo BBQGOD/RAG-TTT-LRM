@@ -4,5 +4,9 @@ post_train/training_*
 rag/lightrag_cache_*
 lightrag_cache_*
 
+inf_scaling/inf_code/training_*
+inf_scaling/inf_code/inf_data*
+inf_scaling/inf_code/inf_conf_data
+
 *.log
 **/__pycache__/**

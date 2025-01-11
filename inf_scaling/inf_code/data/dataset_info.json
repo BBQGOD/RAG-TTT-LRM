@@ -1,0 +1,9 @@
+{
+    "gpqa_qwq_inf_all": {
+        "file_name": "/flash2/aml/zjliu24/gpqa_agent/inf_data/inf_data_qwq_preview/training_set_all.json",
+        "formatting": "sharegpt",
+        "columns": {
+            "messages": "conversations"
+        }
+    }
+}

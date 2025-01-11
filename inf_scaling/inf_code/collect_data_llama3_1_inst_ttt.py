@@ -9,13 +9,13 @@ from datasets import load_dataset
 
 from template import TEMPLATE
 
-MODEL = "/flash2/aml/public/models/QwQ-32B-Preview"
+MODEL = "/flash2/aml/zjliu24/gpqa_agent/inf_scaling/inf_code/training_inst_all"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0.5
-MAX_TOKENS = 20480
-TARGET_FILE = "/flash2/aml/zjliu24/h20_data/inf_data_qwq_preview/gpqa_inf_data.jsonl"
-ANS_NUM = 64
-SKIP_ROW = 0
+MAX_TOKENS = 16384
+TARGET_FILE = "/flash2/aml/zjliu24/h20_data/inf_data_llama3_1_inst_ttt/gpqa_inf_data_1.jsonl"
+ANS_NUM = 48
+SKIP_ROW = 224
 
 
 client = OpenAI(
@@ -37,9 +37,9 @@ def call_llm(question, choices):
     return response.choices[0].message.content
 
 def extract_last_X(s):
-    # need to be updated by `inf_scaling/inf_code/update_data.py`
-    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]', s)
-    results = [match[0] if match[0] else match[1] for match in matches]
+    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]|\[([abcdABCD])\]|\((([abcdABCD]))\)', s)
+    
+    results = [match[0] if match[0] else match[1] if match[1] else match[2] if match[2] else match[3] for match in matches]
     
     return results[-1].upper() if results else None
 

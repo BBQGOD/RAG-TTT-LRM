@@ -1,10 +1,12 @@
-# Retrieval-Augmented Generation (RAG) Meets Per-Domain Test-Time Training (TTT)
+# GPQA Agent
 
 > Course Project of Advanced Machine Learning (AML) in THU 2024 Fall
 
 The project discovers how to combine the power of Retrieval-Augmented Generation (RAG) and Test-Time Training (TTT) to improve some cutting-edge Large Language Models (LLMs)' performance on the challenging GPQA benchmark. 
 
 Preliminary results show that the per-domain TTT on pretrained LLMs but aligned LLMs can improve its performance without RAG, but the per-domain TTT on aligned LLMs shows significant improvement when combined with RAG.
+
+**Update**: `inf_scaling` folder is added to show how to scale the inference compute of long reasoning models with small proxy models.
 
 ## Environment Setup
 

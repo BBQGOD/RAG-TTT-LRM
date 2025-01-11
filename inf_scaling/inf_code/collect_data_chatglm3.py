@@ -9,17 +9,17 @@ from datasets import load_dataset
 
 from template import TEMPLATE
 
-MODEL = "/flash2/aml/public/models/QwQ-32B-Preview"
+MODEL = "/flash2/aml/public/models/chatglm3-6b"
 DATA_DIR = r"/flash2/aml/zjliu24/datasets/gpqa_formatted"
 TEMPERATURE = 0.5
-MAX_TOKENS = 20480
-TARGET_FILE = "/flash2/aml/zjliu24/h20_data/inf_data_qwq_preview/gpqa_inf_data.jsonl"
-ANS_NUM = 64
+MAX_TOKENS = 4096
+TARGET_FILE = "/flash2/aml/zjliu24/h13_data/inf_data_chatglm3/gpqa_inf_data.jsonl"
+ANS_NUM = 256
 SKIP_ROW = 0
 
 
 client = OpenAI(
-        base_url=f"http://localhost:7688/v1",
+        base_url=f"http://localhost:7689/v1",
         api_key="token-abc123",
         timeout=600
     )
@@ -37,9 +37,9 @@ def call_llm(question, choices):
     return response.choices[0].message.content
 
 def extract_last_X(s):
-    # need to be updated by `inf_scaling/inf_code/update_data.py`
-    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]', s)
-    results = [match[0] if match[0] else match[1] for match in matches]
+    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]|\[([abcdABCD])\]|\((([abcdABCD]))\)', s)
+    
+    results = [match[0] if match[0] else match[1] if match[1] else match[2] if match[2] else match[3] for match in matches]
     
     return results[-1].upper() if results else None
 

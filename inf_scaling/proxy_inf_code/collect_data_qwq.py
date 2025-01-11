@@ -37,9 +37,9 @@ def call_llm(question, choices):
     return response.choices[0].message.content
 
 def extract_last_X(s):
-    # need to be updated by `inf_scaling/inf_code/update_data.py`
-    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]', s)
-    results = [match[0] if match[0] else match[1] for match in matches]
+    matches = re.findall(r'\[\[([abcdABCD])\]\]|\[\boxed{([abcdABCD])}\]|\[([abcdABCD])\]|\((([abcdABCD]))\)', s)
+    
+    results = [match[0] if match[0] else match[1] if match[1] else match[2] if match[2] else match[3] for match in matches]
     
     return results[-1].upper() if results else None
 
